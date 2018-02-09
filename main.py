@@ -10,7 +10,12 @@ def decode_mute(event):
     decode_tab.focus()
 
 
+def encode_message(event):
+    print(encode_text_input.get(0.0, END))
+
+
 root = Tk()
+root.title("Arithmetic Encryption")
 # root.minsize(500, 500)
 # root.maxsize(500, 500)
 frame_width = 350
@@ -37,6 +42,7 @@ encode_result_label.place(x=label_size[0]+2, y=label_size[1]+1, width=label_size
 
 encode_submit = Button(encode_tab, text="Submit \nEncoding")
 encode_submit.place(x=260, y=63, width=80, height=40)
+encode_submit.bind("<Button-1>", encode_message)
 
 encode_errors = Label(encode_tab, fg="red")
 encode_errors.place(x=7, y=104, width=330, height=20)
