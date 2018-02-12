@@ -32,26 +32,46 @@ def encode_message(event):
     pass
 
 
-def encode_message_lambda(user_string, result_label):
+def encode_message_lambda(user_string, result_label, text_info):
     user_string = str(user_string.lower().strip())
+    text_info.delete(0.0, END)
+    text_info.insert(0.0, "User's string: " + user_string + "\n")
     array_of_letters = []
     for ch in list(user_string):
         if not ord(ch) == 10:
             array_of_letters.append(ch)
     array_of_letters.sort()
     frequency_of_letters = []
-    count = 1
+    text_info.insert(END, "Frequency of symbols:\n")
+    # count = 1
+    # vector_length = 0
+    # for i in range(1, array_of_letters.__len__()):
+    #     if i == array_of_letters.__len__()-1:
+    #         count += 1
+    #         frequency_of_letters.append(Symbol(array_of_letters[i], count))
+    #         vector_length += count
+    #     if array_of_letters[i] != array_of_letters[i-1]:
+    #         vector_length += count
+    #         frequency_of_letters.append(Symbol(array_of_letters[i-1], count))
+    #         count = 0
+    #     count += 1
+    count = 0
     vector_length = 0
-    for i in range(1, array_of_letters.__len__()):
-        if i == array_of_letters.__len__()-1:
-            count += 1
-            frequency_of_letters.append(Symbol(array_of_letters[i], count))
+    for ch_i in list(array_of_letters):
+        for ch_g in list(array_of_letters):
+            if ch_i == ch_g:
+                count += 1
+        is_exist = False
+        for sym in frequency_of_letters:
+            if sym.symbol == ch_i:
+                is_exist = True
+        if not is_exist:
+            frequency_of_letters.append(Symbol(ch_i, count))
             vector_length += count
-        if array_of_letters[i] != array_of_letters[i-1]:
-            vector_length += count
-            frequency_of_letters.append(Symbol(array_of_letters[i-1], count))
-            count = 0
-        count += 1
+        count = 0
+    for sym in frequency_of_letters:
+        print(sym.symbol + " " + str(sym.frequency))
+    print("!")
     frequency_of_letters.sort(key=get_frequency, reverse=True)
     dict_of_letters = dict()
     length = 0
@@ -68,7 +88,10 @@ def encode_message_lambda(user_string, result_label):
         low_board = low_old + (high_old - low_old)*dict_of_letters[ch].low_board
         high_old = high_board
         low_old = low_board
-    result_label.config(text=str(low_board) + " " + str(high_board))
+    if low_board == high_board:
+        result_label.config(text=str(high_board))
+    else:
+        result_label.config(text=str(low_board) + "\n" + str(high_board))
 
 
 def decode_message(event):
@@ -119,7 +142,9 @@ def main():
 
     encode_submit = Button(encode_tab,
                            text="Submit \nEncoding",
-                           command=lambda: encode_message_lambda(encode_text_input.get(0.0, END), encode_result_label))
+                           command=lambda: encode_message_lambda(encode_text_input.get(0.0, END),
+                                                                 encode_result_label,
+                                                                 encode_text_info))
     # encode_submit.bind("<Button-1>", encode_message)
     encode_submit.place(x=260,
                         y=63,
