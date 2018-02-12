@@ -32,8 +32,12 @@ def encode_message(event):
     pass
 
 
-def encode_message_lambda(user_string, result_label, text_info):
+def encode_message_lambda(user_string, result_label, text_info, errors_label):
     user_string = str(user_string.lower().strip())
+    if user_string == "":
+        errors_label.config(text="Check input string")
+        return
+    errors_label.config(text="")
     text_info.delete(0.0, END)
     text_info.insert(0.0, "User's string: " + user_string + "\n")
     array_of_letters = []
@@ -69,9 +73,6 @@ def encode_message_lambda(user_string, result_label, text_info):
             frequency_of_letters.append(Symbol(ch_i, count))
             vector_length += count
         count = 0
-    for sym in frequency_of_letters:
-        print(sym.symbol + " " + str(sym.frequency))
-    print("!")
     frequency_of_letters.sort(key=get_frequency, reverse=True)
     dict_of_letters = dict()
     length = 0
@@ -79,6 +80,9 @@ def encode_message_lambda(user_string, result_label, text_info):
         dict_of_letters[element.symbol] = Board(length, 0)
         length += element.frequency/vector_length
         dict_of_letters[element.symbol] = Board(dict_of_letters[element.symbol].low_board, length)
+        text_info.insert(END, element.symbol + "-" + str(element.frequency)+"\n")
+        text_info.insert(END, "from " + str(dict_of_letters[element.symbol].low_board) + "\n")
+        text_info.insert(END, "to " + str(dict_of_letters[element.symbol].high_board) + "\n\n")
     low_old = 0
     low_board = 0
     high_old = 1
@@ -106,12 +110,12 @@ def main():
 
     root = Tk()
     root.title("Arithmetic Encryption")
-    # root.minsize(500, 500)
-    # root.maxsize(500, 500)
-    frame_width = 350
-    frame_height = 370
-    config_size = "{0}x{1}".format(frame_width, frame_height)
-    root.geometry(config_size)
+    root.minsize(350, 370)
+    root.maxsize(350, 370)
+    # frame_width = 350
+    # frame_height = 370
+    # config_size = "{0}x{1}".format(frame_width, frame_height)
+    # root.geometry(config_size)
 
     tabs = ttk.Notebook(root)
     tabs.pack(fill="both", expand=True)
@@ -128,6 +132,14 @@ def main():
                             height=53)
 
     label_size = [5, 64, 252, 40]
+
+    encode_errors = Label(encode_tab,
+                          fg="red")
+    encode_errors.place(x=label_size[0],
+                        y=94,
+                        width=label_size[2],
+                        height=label_size[3])
+
     encode_result_frame = LabelFrame(encode_tab)
     encode_result_frame.place(x=label_size[0],
                               y=label_size[1],
@@ -144,19 +156,14 @@ def main():
                            text="Submit \nEncoding",
                            command=lambda: encode_message_lambda(encode_text_input.get(0.0, END),
                                                                  encode_result_label,
-                                                                 encode_text_info))
+                                                                 encode_text_info,
+                                                                 encode_errors))
     # encode_submit.bind("<Button-1>", encode_message)
     encode_submit.place(x=260,
                         y=63,
                         width=80,
                         height=40)
     # Field to print errors in encode situation
-    encode_errors = Label(encode_tab,
-                          fg="red")
-    encode_errors.place(x=7,
-                        y=104,
-                        width=330,
-                        height=20)
 
     info_size = [5, 125, 335, 215]
     encode_text_info = Text(encode_tab)
@@ -181,7 +188,10 @@ def main():
     decode_result_label = Label(decode_tab,
                                 text="Input symbols and their frequency \n"
                                      "as in example: A-2\\n B-3\\n C-3")
-    decode_result_label.place(x=label_size[0]+2, y=label_size[1]-58, width=label_size[2]-4, height=label_size[3]-3)
+    decode_result_label.place(x=label_size[0]+2,
+                              y=label_size[1]-58,
+                              width=label_size[2]-4,
+                              height=label_size[3]-3)
 
     decode_submit = Button(decode_tab,
                            text="Submit \nDecoding")
