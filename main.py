@@ -237,7 +237,7 @@ def main():
                                                                  decode_text_result,
                                                                  decode_errors))
     decode_submit.place(x=260,
-                        y=5,
+                        y=6,
                         width=80,
                         height=40)
     # decode_submit.bind("<Button-1>", decode_message)
