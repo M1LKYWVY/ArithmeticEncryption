@@ -2,6 +2,8 @@
 
 from tkinter import *
 from tkinter import ttk
+from tkinter import messagebox
+import pyperclip
 
 
 class Symbol:
@@ -22,6 +24,17 @@ def get_frequency(element):
 
 def encode_mute(event):
     event.widget._nametowidget(event.widget.winfo_parent()).focus()
+    try:
+        if event.widget.get(0.0, END) == "Encoding information\n":
+            return
+    except AttributeError:
+        if event.widget["text"] == "Result":
+            return
+    try:
+        pyperclip.copy(event.widget.get(0.0, END).replace("", ""))
+    except AttributeError:
+        pyperclip.copy(event.widget["text"])
+    messagebox.showinfo("System information", "Widget's value copied to clipboard")
 
 
 def decode_mute(event):
@@ -32,10 +45,16 @@ def encode_message(event):
     pass
 
 
-def encode_message_lambda(user_string, result_label, text_info, errors_label):
-    user_string = str(user_string.lower().strip())
+def encode_message_lambda(text_input, result_label, text_info, errors_label):
+    glass = text_input.get(0.0, END)
+    glass = glass.replace("\n", "")
+    text_input.delete(0.0, END)
+    text_input.insert(0.0, glass)
+    user_string = text_input.get(0.0, END)
+    copy_string = ""
+    user_string = str(user_string.lower().strip().replace(" ", "_"))
     if user_string == "":
-        errors_label.config(text="Check input string")
+        errors_label.config(text="User's string not found")
         return
     errors_label.config(text="")
     text_info.delete(0.0, END)
@@ -47,18 +66,6 @@ def encode_message_lambda(user_string, result_label, text_info, errors_label):
     array_of_letters.sort()
     frequency_of_letters = []
     text_info.insert(END, "Frequency of symbols:\n")
-    # count = 1
-    # vector_length = 0
-    # for i in range(1, array_of_letters.__len__()):
-    #     if i == array_of_letters.__len__()-1:
-    #         count += 1
-    #         frequency_of_letters.append(Symbol(array_of_letters[i], count))
-    #         vector_length += count
-    #     if array_of_letters[i] != array_of_letters[i-1]:
-    #         vector_length += count
-    #         frequency_of_letters.append(Symbol(array_of_letters[i-1], count))
-    #         count = 0
-    #     count += 1
     count = 0
     vector_length = 0
     for ch_i in list(array_of_letters):
@@ -79,8 +86,9 @@ def encode_message_lambda(user_string, result_label, text_info, errors_label):
     for element in frequency_of_letters:
         dict_of_letters[element.symbol] = Board(length, 0)
         length += element.frequency/vector_length
+        copy_string += element.symbol + "-" + str(element.frequency) + "\n"
         dict_of_letters[element.symbol] = Board(dict_of_letters[element.symbol].low_board, length)
-        text_info.insert(END, element.symbol + "-" + str(element.frequency)+"\n")
+        text_info.insert(END, "\'" + element.symbol + "\'" + "-" + str(element.frequency)+"\n")
         text_info.insert(END, "from " + str(dict_of_letters[element.symbol].low_board) + "\n")
         text_info.insert(END, "to " + str(dict_of_letters[element.symbol].high_board) + "\n\n")
     low_old = 0
@@ -96,18 +104,50 @@ def encode_message_lambda(user_string, result_label, text_info, errors_label):
         result_label.config(text=str(high_board))
     else:
         result_label.config(text=str(low_board) + "\n" + str(high_board))
+    pyperclip.copy(copy_string)
 
 
 def decode_message(event):
     pass
 
 
-def decode_message_lambda(user_string):
-    pass
+def decode_message_lambda(user_code, text_info, text_result, errors_label):
+    user_code = float(user_code)
+    text_info = text_info.lower().strip()
+    lines = text_info.split("\n")
+    precision = int(lines[0].split("-")[1])
+    frequency_of_letters = []
+    for line in lines:
+        if line.split("-")[0] == "precision":
+            continue
+        frequency_of_letters.append(Symbol(line.split("-")[0], int(line.split("-")[1])))
+    frequency_of_letters.sort(key=get_frequency, reverse=True)
+    vector_length = 0
+    for sym in frequency_of_letters:
+        vector_length += sym.frequency
+    dict_of_letters = dict()
+    length = 0
+    for element in frequency_of_letters:
+        dict_of_letters[element.symbol] = Board(length, 0)
+        length += element.frequency / vector_length
+        dict_of_letters[element.symbol] = Board(dict_of_letters[element.symbol].low_board, length)
+    first_char = ""
+    for sym in frequency_of_letters:
+        if dict_of_letters[sym.symbol].low_board <= user_code <= dict_of_letters[sym.symbol].high_board:
+            first_char = sym.symbol
+    user_string = [first_char]
+    for i in range(0, precision):
+        user_code = (user_code - dict_of_letters[user_string[i]].low_board) /\
+                    (dict_of_letters[user_string[i]].high_board - dict_of_letters[user_string[i]].low_board)
+        print(user_code)
+        for sym in frequency_of_letters:
+            if dict_of_letters[sym.symbol].low_board <= user_code <= dict_of_letters[sym.symbol].high_board:
+                print(sym.symbol)
+                user_string.append(sym.symbol)
+    print(user_string)
 
 
 def main():
-
     root = Tk()
     root.title("Arithmetic Encryption")
     root.minsize(350, 370)
@@ -130,6 +170,10 @@ def main():
                             y=5,
                             width=335,
                             height=53)
+    encode_text_input.bind("<Return>", lambda _: encode_message_lambda(encode_text_input,
+                                                                       encode_result_label,
+                                                                       encode_text_info,
+                                                                       encode_errors))
 
     label_size = [5, 64, 252, 40]
 
@@ -151,10 +195,11 @@ def main():
                               y=label_size[1]+1,
                               width=label_size[2]-4,
                               height=label_size[3]-3)
+    encode_result_label.bind("<Button-1>", encode_mute)
 
     encode_submit = Button(encode_tab,
                            text="Submit \nEncoding",
-                           command=lambda: encode_message_lambda(encode_text_input.get(0.0, END),
+                           command=lambda: encode_message_lambda(encode_text_input,
                                                                  encode_result_label,
                                                                  encode_text_info,
                                                                  encode_errors))
@@ -163,7 +208,6 @@ def main():
                         y=63,
                         width=80,
                         height=40)
-    # Field to print errors in encode situation
 
     info_size = [5, 125, 335, 215]
     encode_text_info = Text(encode_tab)
@@ -180,43 +224,53 @@ def main():
     encode_text_scrollbar.pack(side='right',
                                fill='y')
 
-    decode_result_frame = LabelFrame(decode_tab)
-    decode_result_frame.place(x=label_size[0],
-                              y=label_size[1]-59,
-                              width=label_size[2],
-                              height=label_size[3])
-    decode_result_label = Label(decode_tab,
-                                text="Input symbols and their frequency \n"
-                                     "as in example: A-2\\n B-3\\n C-3")
-    decode_result_label.place(x=label_size[0]+2,
-                              y=label_size[1]-58,
-                              width=label_size[2]-4,
-                              height=label_size[3]-3)
+    decode_float_input = Text(decode_tab)
+    decode_float_input.place(x=label_size[0]+3,
+                             y=label_size[1]-58,
+                             width=label_size[2]-5,
+                             height=label_size[3])
 
     decode_submit = Button(decode_tab,
-                           text="Submit \nDecoding")
+                           text="Submit \nDecoding",
+                           command=lambda: decode_message_lambda(decode_float_input.get(0.0, END),
+                                                                 decode_text_input.get(0.0, END),
+                                                                 decode_text_result,
+                                                                 decode_errors))
     decode_submit.place(x=260,
                         y=5,
                         width=80,
                         height=40)
-    decode_submit.bind("<Button-1>", decode_message)
-    # Field to print errors in decode situations
+    # decode_submit.bind("<Button-1>", decode_message)
+
     decode_errors = Label(decode_tab, fg="red")
-    decode_errors.place(x=7, y=45, width=330, height=20)
+    decode_errors.place(x=9, y=50, width=250, height=12)
+
+    decode_result_frame = LabelFrame(decode_tab)
+    decode_result_frame.place(x=7,
+                              y=66,
+                              width=330,
+                              height=label_size[3]+4)
+    decode_result_label = Label(decode_tab,
+                                text="Input precision, symbols and their frequency \n"
+                                     "as in example: precision-5\\nA-2\\nB-3\\nC-3")
+    decode_result_label.place(x=8,
+                              y=68,
+                              width=320,
+                              height=label_size[3] - 3)
 
     decode_text_input = Text(decode_tab)
     decode_text_input.place(x=7,
-                            y=67,
+                            y=115,
                             width=330,
-                            height=220)
-    decode_text_input.insert(0.0, "A-2\nB-3\nC-3")
+                            height=170)
+    decode_text_input.insert(0.0, "precision-5\nA-2\nB-3\nC-3")
 
     decode_text_result = Text(decode_tab,
                               font="Arial 14")
     decode_text_result.place(x=7,
                              y=290,
                              width=330,
-                             height=53)
+                             height=50)
     decode_text_result.insert(0.0, "Result")
     decode_text_result.bind("<FocusIn>", decode_mute)
 
