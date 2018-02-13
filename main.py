@@ -60,7 +60,7 @@ def encode_message_lambda(text_input, result_label, text_info, errors_label):
         return
     errors_label.config(text="")
     text_info.delete(0.0, END)
-    text_info.insert(0.0, "User's string: " + user_string + "\n")
+    text_info.insert(0.0, "User's string:\n" + user_string + "\n")
     array_of_letters = []
     for ch in list(user_string):
         if not ord(ch) == 10:
@@ -114,7 +114,8 @@ def decode_message(event):
 
 
 def decode_message_lambda(user_code, text_info, text_result, errors_label):
-    user_code = float(user_code)
+    getcontext().prec = 38
+    user_code = Decimal(user_code)
     text_info = text_info.lower().strip()
     lines = text_info.split("\n")
     precision = int(lines[0].split("-")[1])
@@ -122,17 +123,17 @@ def decode_message_lambda(user_code, text_info, text_result, errors_label):
     for line in lines:
         if line.split("-")[0] == "precision":
             continue
-        frequency_of_letters.append(Symbol(line.split("-")[0], int(line.split("-")[1])))
+        frequency_of_letters.append(Symbol(line.split("-")[0], Decimal(line.split("-")[1])))
     frequency_of_letters.sort(key=get_frequency, reverse=True)
-    vector_length = 0
+    vector_length = Decimal(0)
     for sym in frequency_of_letters:
         vector_length += sym.frequency
     dict_of_letters = dict()
-    length = 0
+    length = Decimal(0)
     for element in frequency_of_letters:
         dict_of_letters[element.symbol] = Board(length, 0)
         length += element.frequency / vector_length
-        dict_of_letters[element.symbol] = Board(dict_of_letters[element.symbol].low_board, length)
+        dict_of_letters[element.symbol] = Board(dict_of_letters[element.symbol].low_board, Decimal(length))
     first_char = ""
     for sym in frequency_of_letters:
         if dict_of_letters[sym.symbol].low_board <= user_code <= dict_of_letters[sym.symbol].high_board:
