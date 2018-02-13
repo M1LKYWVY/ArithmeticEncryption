@@ -3,7 +3,7 @@
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
-import pyperclip
+from pyperclip import *
 from decimal import *
 
 
@@ -32,14 +32,18 @@ def encode_mute(event):
         if event.widget["text"] == "Result":
             return
     try:
-        pyperclip.copy(event.widget.get(0.0, END).replace("", ""))
+        copy(event.widget.get(0.0, END).replace("", ""))
     except AttributeError:
-        pyperclip.copy(event.widget["text"])
+        copy(event.widget["text"])
     messagebox.showinfo("System information", "Widget's value copied to clipboard")
 
 
 def decode_mute(event):
     event.widget._nametowidget(event.widget.winfo_parent()).focus()
+    if type(event.widget) is Text:
+        if event.widget.get(0.0, END) != "Result\n":
+            copy(event.widget.get(0.0, END))
+            messagebox.showinfo("System information", "Widget's value copied to clipboard")
 
 
 def encode_message(event):
@@ -54,7 +58,7 @@ def encode_message_lambda(text_input, result_label, text_info, errors_label):
     text_input.insert(0.0, glass)
     user_string = text_input.get(0.0, END)
     copy_string = ""
-    user_string = str(user_string.lower().strip().replace(" ", "_"))
+    user_string = str(user_string.strip().replace(" ", "_"))
     if user_string == "":
         errors_label.config(text="User's string not found")
         return
@@ -106,7 +110,7 @@ def encode_message_lambda(text_input, result_label, text_info, errors_label):
         result_label.config(text=str(high_board))
     else:
         result_label.config(text=str(low_board) + "\n" + str(high_board))
-    pyperclip.copy(copy_string)
+    copy(copy_string)
 
 
 def decode_message(event):
@@ -115,15 +119,32 @@ def decode_message(event):
 
 def decode_message_lambda(user_code, text_info, text_result, errors_label):
     getcontext().prec = 38
-    user_code = Decimal(user_code)
-    text_info = text_info.lower().strip()
+    glass = user_code.get(0.0, END)
+    glass = glass.replace("\n", "")
+    user_code.delete(0.0, END)
+    user_code.insert(0.0, glass)
+    user_string = str(glass.strip().replace(" ", "_"))
+    if user_string == "":
+        errors_label.config(text="User's string not found")
+        return
+    try:
+        user_code = Decimal(glass)
+    except InvalidOperation:
+        errors_label.config(text="Can not parse user's string to decimal")
+        return
+    errors_label.config(text="")
+    text_info = text_info.strip()
     lines = text_info.split("\n")
     precision = int(lines[0].split("-")[1])
     frequency_of_letters = []
     for line in lines:
         if line.split("-")[0] == "precision":
             continue
-        frequency_of_letters.append(Symbol(line.split("-")[0], Decimal(line.split("-")[1])))
+        try:
+            frequency_of_letters.append(Symbol(line.split("-")[0], Decimal(line.split("-")[1])))
+        except InvalidOperation:
+            errors_label.config(text="Can not parse text information")
+            return
     frequency_of_letters.sort(key=get_frequency, reverse=True)
     vector_length = Decimal(0)
     for sym in frequency_of_letters:
@@ -142,12 +163,14 @@ def decode_message_lambda(user_code, text_info, text_result, errors_label):
     for i in range(0, precision):
         user_code = (user_code - dict_of_letters[user_string[i]].low_board) /\
                     (dict_of_letters[user_string[i]].high_board - dict_of_letters[user_string[i]].low_board)
-        print(user_code)
         for sym in frequency_of_letters:
             if dict_of_letters[sym.symbol].low_board <= user_code <= dict_of_letters[sym.symbol].high_board:
-                print(sym.symbol)
                 user_string.append(sym.symbol)
-    print(user_string)
+    result_string = ""
+    for ch in user_string:
+        result_string += ch
+    text_result.delete(0.0, END)
+    text_result.insert(0.0, result_string)
 
 
 def main():
@@ -221,21 +244,25 @@ def main():
     encode_text_info.bind("<FocusIn>", encode_mute)
     encode_text_info.insert(0.0, "Encoding information")
 
-    encode_text_scrollbar = Scrollbar(encode_text_info)
-    encode_text_scrollbar["command"] = encode_text_info.yview
-    encode_text_input["yscrollcommand"] = encode_text_scrollbar.set
-    encode_text_scrollbar.pack(side='right',
-                               fill='y')
+    # encode_text_scrollbar = Scrollbar(encode_text_info)
+    # encode_text_scrollbar["command"] = encode_text_info.yview
+    # encode_text_input["yscrollcommand"] = encode_text_scrollbar.set
+    # encode_text_scrollbar.pack(side='right',
+    #                            fill='y')
 
     decode_float_input = Text(decode_tab)
     decode_float_input.place(x=label_size[0]+3,
                              y=label_size[1]-58,
                              width=label_size[2]-5,
                              height=label_size[3])
+    decode_float_input.bind("<Return>", lambda _: decode_message_lambda(decode_float_input,
+                                                                        decode_text_input.get(0.0, END),
+                                                                        decode_text_result,
+                                                                        decode_errors))
 
     decode_submit = Button(decode_tab,
                            text="Submit \nDecoding",
-                           command=lambda: decode_message_lambda(decode_float_input.get(0.0, END),
+                           command=lambda: decode_message_lambda(decode_float_input,
                                                                  decode_text_input.get(0.0, END),
                                                                  decode_text_result,
                                                                  decode_errors))
@@ -246,7 +273,10 @@ def main():
     # decode_submit.bind("<Button-1>", decode_message)
 
     decode_errors = Label(decode_tab, fg="red")
-    decode_errors.place(x=9, y=50, width=250, height=12)
+    decode_errors.place(x=9,
+                        y=48,
+                        width=250,
+                        height=15)
 
     decode_result_frame = LabelFrame(decode_tab)
     decode_result_frame.place(x=7,
@@ -264,9 +294,17 @@ def main():
     decode_text_input = Text(decode_tab)
     decode_text_input.place(x=7,
                             y=115,
-                            width=330,
+                            width=313,
                             height=170)
     decode_text_input.insert(0.0, "precision-5\nA-2\nB-3\nC-3")
+
+    decode_text_scrollbar = Scrollbar(decode_tab)
+    decode_text_scrollbar["command"] = decode_text_input.yview
+    decode_text_input["yscrollcommand"] = decode_text_scrollbar.set
+    decode_text_scrollbar.place(x=321,
+                                y=115,
+                                width=15,
+                                height=170)
 
     decode_text_result = Text(decode_tab,
                               font="Arial 14")
@@ -276,12 +314,6 @@ def main():
                              height=50)
     decode_text_result.insert(0.0, "Result")
     decode_text_result.bind("<FocusIn>", decode_mute)
-
-    decode_text_scrollbar = Scrollbar(decode_text_input)
-    decode_text_scrollbar["command"] = decode_text_input.yview
-    decode_text_input["yscrollcommand"] = decode_text_scrollbar.set
-    decode_text_scrollbar.pack(side='right',
-                               fill='y')
 
     root.mainloop()
 
