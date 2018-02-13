@@ -4,6 +4,7 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
 import pyperclip
+from decimal import *
 
 
 class Symbol:
