@@ -47,6 +47,7 @@ def encode_message(event):
 
 
 def encode_message_lambda(text_input, result_label, text_info, errors_label):
+    getcontext().prec = 38
     glass = text_input.get(0.0, END)
     glass = glass.replace("\n", "")
     text_input.delete(0.0, END)
@@ -67,12 +68,12 @@ def encode_message_lambda(text_input, result_label, text_info, errors_label):
     array_of_letters.sort()
     frequency_of_letters = []
     text_info.insert(END, "Frequency of symbols:\n")
-    count = 0
-    vector_length = 0
+    count = Decimal(0)
+    vector_length = Decimal(0)
     for ch_i in list(array_of_letters):
         for ch_g in list(array_of_letters):
             if ch_i == ch_g:
-                count += 1
+                count += Decimal(1)
         is_exist = False
         for sym in frequency_of_letters:
             if sym.symbol == ch_i:
@@ -80,10 +81,10 @@ def encode_message_lambda(text_input, result_label, text_info, errors_label):
         if not is_exist:
             frequency_of_letters.append(Symbol(ch_i, count))
             vector_length += count
-        count = 0
+        count = Decimal(0)
     frequency_of_letters.sort(key=get_frequency, reverse=True)
     dict_of_letters = dict()
-    length = 0
+    length = Decimal(0)
     for element in frequency_of_letters:
         dict_of_letters[element.symbol] = Board(length, 0)
         length += element.frequency/vector_length
@@ -92,10 +93,10 @@ def encode_message_lambda(text_input, result_label, text_info, errors_label):
         text_info.insert(END, "\'" + element.symbol + "\'" + "-" + str(element.frequency)+"\n")
         text_info.insert(END, "from " + str(dict_of_letters[element.symbol].low_board) + "\n")
         text_info.insert(END, "to " + str(dict_of_letters[element.symbol].high_board) + "\n\n")
-    low_old = 0
-    low_board = 0
-    high_old = 1
-    high_board = 1
+    low_old = Decimal(0)
+    low_board = Decimal(0)
+    high_old = Decimal(1)
+    high_board = Decimal(1)
     for ch in list(user_string):
         high_board = low_old + (high_old - low_old)*dict_of_letters[ch].high_board
         low_board = low_old + (high_old - low_old)*dict_of_letters[ch].low_board
