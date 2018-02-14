@@ -5,6 +5,7 @@ from tkinter import ttk
 from tkinter import messagebox
 from pyperclip import *
 from decimal import *
+from encryptions import *
 
 
 class Symbol:
@@ -57,59 +58,28 @@ def encode_message_lambda(text_input, result_label, text_info, errors_label):
     text_input.delete(0.0, END)
     text_input.insert(0.0, glass)
     user_string = text_input.get(0.0, END)
+    glass = ""
+    for ch in list(user_string):
+        if not ord(ch) == 10:
+            glass += ch
+    user_string = glass.strip().replace(" ", "_")
     copy_string = ""
-    user_string = str(user_string.strip().replace(" ", "_"))
     if user_string == "":
         errors_label.config(text="User's string not found")
         return
     errors_label.config(text="")
     text_info.delete(0.0, END)
     text_info.insert(0.0, "User's string:\n" + user_string + "\n")
-    array_of_letters = []
-    for ch in list(user_string):
-        if not ord(ch) == 10:
-            array_of_letters.append(ch)
-    array_of_letters.sort()
-    frequency_of_letters = []
+    frequency_of_letters = get_symbols_frequency(user_string, precision=38)
+    low_board, high_board = encode(frequency_of_letters, user_string, precision=38)
+    dict_of_letters = get_intervals_of_symbols(frequency_of_letters, user_string, precision=38)
     text_info.insert(END, "Frequency of symbols:\n")
-    count = Decimal(0)
-    vector_length = Decimal(0)
-    for ch_i in list(array_of_letters):
-        for ch_g in list(array_of_letters):
-            if ch_i == ch_g:
-                count += Decimal(1)
-        is_exist = False
-        for sym in frequency_of_letters:
-            if sym.symbol == ch_i:
-                is_exist = True
-        if not is_exist:
-            frequency_of_letters.append(Symbol(ch_i, count))
-            vector_length += count
-        count = Decimal(0)
-    frequency_of_letters.sort(key=get_frequency, reverse=True)
-    dict_of_letters = dict()
-    length = Decimal(0)
     for element in frequency_of_letters:
-        dict_of_letters[element.symbol] = Board(length, 0)
-        length += element.frequency/vector_length
         copy_string += element.symbol + "-" + str(element.frequency) + "\n"
-        dict_of_letters[element.symbol] = Board(dict_of_letters[element.symbol].low_board, length)
         text_info.insert(END, "\'" + element.symbol + "\'" + "-" + str(element.frequency)+"\n")
         text_info.insert(END, "from " + str(dict_of_letters[element.symbol].low_board) + "\n")
         text_info.insert(END, "to " + str(dict_of_letters[element.symbol].high_board) + "\n\n")
-    low_old = Decimal(0)
-    low_board = Decimal(0)
-    high_old = Decimal(1)
-    high_board = Decimal(1)
-    for ch in list(user_string):
-        high_board = low_old + (high_old - low_old)*dict_of_letters[ch].high_board
-        low_board = low_old + (high_old - low_old)*dict_of_letters[ch].low_board
-        high_old = high_board
-        low_old = low_board
-    if low_board == high_board:
-        result_label.config(text=str(high_board))
-    else:
-        result_label.config(text=str(low_board) + "\n" + str(high_board))
+    result_label.config(text=str(low_board) + "\n" + str(high_board))
     copy(copy_string)
 
 
@@ -160,7 +130,8 @@ def decode_message_lambda(user_code, text_info, text_result, errors_label):
         if dict_of_letters[sym.symbol].low_board <= user_code <= dict_of_letters[sym.symbol].high_board:
             first_char = sym.symbol
     user_string = [first_char]
-    for i in range(0, precision):
+    for i in range(0, precision-1):
+        print(i)
         user_code = (user_code - dict_of_letters[user_string[i]].low_board) /\
                     (dict_of_letters[user_string[i]].high_board - dict_of_letters[user_string[i]].low_board)
         for sym in frequency_of_letters:
