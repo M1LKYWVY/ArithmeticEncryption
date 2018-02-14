@@ -58,28 +58,34 @@ def encode_message_lambda(text_input, result_label, text_info, errors_label):
     text_input.delete(0.0, END)
     text_input.insert(0.0, glass)
     user_string = text_input.get(0.0, END)
+    if user_string == "":
+        errors_label.config(text="User's string not found")
+        return
+    elif len(user_string) > 39:
+        errors_label.config(text="Very long user's string. 39 symbols is maximum.")
+        return
     glass = ""
     for ch in list(user_string):
         if not ord(ch) == 10:
             glass += ch
     user_string = glass.strip().replace(" ", "_")
     copy_string = ""
-    if user_string == "":
-        errors_label.config(text="User's string not found")
-        return
     errors_label.config(text="")
     text_info.delete(0.0, END)
     text_info.insert(0.0, "User's string:\n" + user_string + "\n")
     frequency_of_letters = get_symbols_frequency(user_string, precision=38)
     low_board, high_board = encode(frequency_of_letters, user_string, precision=38)
-    dict_of_letters = get_intervals_of_symbols(frequency_of_letters, user_string, precision=38)
+    dict_of_letters = get_intervals_of_symbols(frequency_of_letters, precision=38)
     text_info.insert(END, "Frequency of symbols:\n")
     for element in frequency_of_letters:
         copy_string += element.symbol + "-" + str(element.frequency) + "\n"
         text_info.insert(END, "\'" + element.symbol + "\'" + "-" + str(element.frequency)+"\n")
-        text_info.insert(END, "from " + str(dict_of_letters[element.symbol].low_board) + "\n")
-        text_info.insert(END, "to " + str(dict_of_letters[element.symbol].high_board) + "\n\n")
-    result_label.config(text=str(low_board) + "\n" + str(high_board))
+        text_info.insert(END, "from\n" + str(dict_of_letters[element.symbol].low_board) + "\n")
+        text_info.insert(END, "to\n" + str(dict_of_letters[element.symbol].high_board) + "\n\n")
+    if low_board == high_board:
+        result_label.config(text=str(high_board))
+    else:
+        result_label.config(text=str(low_board) + "\n" + str(high_board))
     copy(copy_string)
 
 
@@ -116,30 +122,8 @@ def decode_message_lambda(user_code, text_info, text_result, errors_label):
             errors_label.config(text="Can not parse text information")
             return
     frequency_of_letters.sort(key=get_frequency, reverse=True)
-    vector_length = Decimal(0)
-    for sym in frequency_of_letters:
-        vector_length += sym.frequency
-    dict_of_letters = dict()
-    length = Decimal(0)
-    for element in frequency_of_letters:
-        dict_of_letters[element.symbol] = Board(length, 0)
-        length += element.frequency / vector_length
-        dict_of_letters[element.symbol] = Board(dict_of_letters[element.symbol].low_board, Decimal(length))
-    first_char = ""
-    for sym in frequency_of_letters:
-        if dict_of_letters[sym.symbol].low_board <= user_code <= dict_of_letters[sym.symbol].high_board:
-            first_char = sym.symbol
-    user_string = [first_char]
-    for i in range(0, precision-1):
-        print(i)
-        user_code = (user_code - dict_of_letters[user_string[i]].low_board) /\
-                    (dict_of_letters[user_string[i]].high_board - dict_of_letters[user_string[i]].low_board)
-        for sym in frequency_of_letters:
-            if dict_of_letters[sym.symbol].low_board <= user_code <= dict_of_letters[sym.symbol].high_board:
-                user_string.append(sym.symbol)
-    result_string = ""
-    for ch in user_string:
-        result_string += ch
+
+    result_string = decode(frequency_of_letters, user_code, precision)
     text_result.delete(0.0, END)
     text_result.insert(0.0, result_string)
 

@@ -40,7 +40,8 @@ def get_symbols_frequency(user_string, precision=20):
     return frequency_of_letters
 
 
-def get_intervals_of_symbols(frequency_of_letters, user_string, precision=20):
+def get_intervals_of_symbols(frequency_of_letters, precision=20):
+    dec.getcontext().prec = precision
     vector_length = dec.Decimal(0)
     for sym in frequency_of_letters:
         vector_length += sym.frequency
@@ -58,7 +59,7 @@ def encode(frequency_of_letters, user_string, precision=20):
     vector_length = dec.Decimal(0)
     for sym in frequency_of_letters:
         vector_length += sym.frequency
-    dict_of_letters = get_intervals_of_symbols(frequency_of_letters, user_string, precision=38)
+    dict_of_letters = get_intervals_of_symbols(frequency_of_letters, precision=38)
     low_old = dec.Decimal(0)
     low_board = dec.Decimal(0)
     high_old = dec.Decimal(1)
@@ -69,3 +70,31 @@ def encode(frequency_of_letters, user_string, precision=20):
         high_old = high_board
         low_old = low_board
     return low_board, high_board
+
+
+def decode(frequency_of_letters, code, precision_of_string=10):
+    vector_length = dec.Decimal(0)
+    for sym in frequency_of_letters:
+        vector_length += sym.frequency
+    dict_of_letters = dict()
+    length = dec.Decimal(0)
+    for element in frequency_of_letters:
+        dict_of_letters[element.symbol] = _Board(length, 0)
+        length += element.frequency / vector_length
+        dict_of_letters[element.symbol] = _Board(dict_of_letters[element.symbol].low_board, dec.Decimal(length))
+    first_char = ""
+    for sym in frequency_of_letters:
+        if dict_of_letters[sym.symbol].low_board <= code <= dict_of_letters[sym.symbol].high_board:
+            first_char = sym.symbol
+    user_string = [first_char]
+    for i in range(0, precision_of_string - 1):
+        code = (code - dict_of_letters[user_string[i]].low_board) / \
+                    (dict_of_letters[user_string[i]].high_board - dict_of_letters[user_string[i]].low_board)
+        for sym in frequency_of_letters:
+            if dict_of_letters[sym.symbol].low_board <= code <= dict_of_letters[sym.symbol].high_board:
+                user_string.append(sym.symbol)
+    result_string = ""
+    for ch in user_string:
+        result_string += ch
+    return result_string
+
