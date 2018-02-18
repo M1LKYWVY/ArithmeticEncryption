@@ -73,12 +73,12 @@ def encode_message_lambda(text_input, result_label, text_info, errors_label):
     errors_label.config(text="")
     text_info.delete(0.0, END)
     text_info.insert(0.0, "User's string:\n" + user_string + "\n")
-    frequency_of_letters = get_symbols_frequency(user_string, precision=38)
+    symbols_frequency = get_symbols_frequency(user_string, precision=38)
     low_board, high_board = encode(user_string, precision=38)
-    dict_of_letters = get_intervals_of_symbols(frequency_of_letters, precision=38)
+    symbols_intervals = get_symbols_intervals(symbols_frequency, precision=38)
     text_info.insert(END, "Frequency of symbols:\n")
-    for element in frequency_of_letters:
-        low, high = get_elements_board(dict_of_letters, element.symbol)
+    for element in symbols_frequency:
+        low, high = get_symbols_boards(symbols_intervals, element.symbol)
         copy_string += element.symbol + "-" + str(element.frequency) + "\n"
         text_info.insert(END, "\'" + element.symbol + "\'" + "-" + str(element.frequency)+"\n")
         text_info.insert(END, "from\n" + str(low) + "\n")
@@ -113,18 +113,18 @@ def decode_message_lambda(user_code, text_info, text_result, errors_label):
     text_info = text_info.strip()
     lines = text_info.split("\n")
     precision = int(lines[0].split("-")[1])
-    frequency_of_letters = []
+    symbols_frequency = []
     for line in lines:
         if line.split("-")[0] == "precision":
             continue
         try:
-            frequency_of_letters.append(Symbol(line.split("-")[0], Decimal(line.split("-")[1])))
+            symbols_frequency.append(Symbol(line.split("-")[0], Decimal(line.split("-")[1])))
         except InvalidOperation:
             errors_label.config(text="Can not parse text information")
             return
-    frequency_of_letters.sort(key=get_frequency, reverse=True)
+    symbols_frequency.sort(key=get_frequency, reverse=True)
 
-    result_string = decode(frequency_of_letters, user_code, precision)
+    result_string = decode(symbols_frequency, user_code, precision)
     text_result.delete(0.0, END)
     text_result.insert(0.0, result_string)
 

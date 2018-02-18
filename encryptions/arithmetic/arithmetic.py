@@ -18,8 +18,8 @@ def _get_frequency(element):
     return element.frequency
 
 
-def get_elements_board(dict_of_letters, symbol):
-    for sym in dict_of_letters:
+def get_symbols_boards(symbols_dict, symbol):
+    for sym in symbols_dict:
         if sym.symbol == symbol:
             return sym.low_board, sym.high_board
 
@@ -30,44 +30,44 @@ def get_symbols_frequency(user_string, precision=20):
     if len(user_string) == 0:
         raise ValueError("Received empty string")
     dec.getcontext().prec = precision
-    array_of_letters = []
+    symbols_array = []
     for ch in list(user_string):
-            array_of_letters.append(ch)
-    array_of_letters.sort()
-    frequency_of_letters = []
+            symbols_array.append(ch)
+    symbols_array.sort()
+    symbols_frequency = []
     count = dec.Decimal(0)
-    for ch_i in list(array_of_letters):
-        for ch_g in list(array_of_letters):
+    for ch_i in list(symbols_array):
+        for ch_g in list(symbols_array):
             if ch_i == ch_g:
                 count += dec.Decimal(1)
         is_exist = False
-        for sym in frequency_of_letters:
+        for sym in symbols_frequency:
             if sym.symbol == ch_i:
                 is_exist = True
         if not is_exist:
-            frequency_of_letters.append(_Symbolfr(ch_i, count))
+            symbols_frequency.append(_Symbolfr(ch_i, count))
         count = dec.Decimal(0)
-    frequency_of_letters.sort(key=_get_frequency, reverse=True)
-    return frequency_of_letters
+    symbols_frequency.sort(key=_get_frequency, reverse=True)
+    return symbols_frequency
 
 
-def get_intervals_of_symbols(frequency_of_letters, precision=20):
+def get_symbols_intervals(symbols_frequency, precision=20):
     if precision <= 0:
         raise ValueError("Precision of encoding can not be less than zero")
     dec.getcontext().prec = precision
     vector_length = dec.Decimal(0)
-    for sym in frequency_of_letters:
+    for sym in symbols_frequency:
         if sym.frequency <= 0:
             raise ValueError("Frequency of symbol less than zero")
         vector_length += sym.frequency
-    dict_of_letters = []
+    symbols_intervals = []
     length = dec.Decimal(0)
-    for element in frequency_of_letters:
+    for element in symbols_frequency:
         low_board = length
         high_board = low_board + element.frequency / vector_length
         length += element.frequency / vector_length
-        dict_of_letters.append(_Symbolbr(element.symbol, low_board, high_board))
-    return dict_of_letters
+        symbols_intervals.append(_Symbolbr(element.symbol, low_board, high_board))
+    return symbols_intervals
 
 
 def encode(user_string, precision=20):
@@ -77,18 +77,18 @@ def encode(user_string, precision=20):
         raise ValueError("Received empty string")
     dec.getcontext().prec = precision
     vector_length = dec.Decimal(0)
-    frequency_of_letters = get_symbols_frequency(user_string, precision)
-    for sym in frequency_of_letters:
+    symbols_frequency = get_symbols_frequency(user_string, precision)
+    for sym in symbols_frequency:
         if sym.frequency <= 0:
             raise ValueError("Frequency of symbol less than zero")
         vector_length += sym.frequency
-    dict_of_letters = get_intervals_of_symbols(frequency_of_letters, precision)
+    symbols_intervals = get_symbols_intervals(symbols_frequency, precision)
     low_old = dec.Decimal(0)
     low_board = dec.Decimal(0)
     high_old = dec.Decimal(1)
     high_board = dec.Decimal(1)
     for ch in list(user_string):
-        low, high = get_elements_board(dict_of_letters, ch)
+        low, high = get_symbols_boards(symbols_intervals, ch)
         high_board = low_old + (high_old - low_old) * high
         low_board = low_old + (high_old - low_old) * low
         high_old = high_board
@@ -96,26 +96,26 @@ def encode(user_string, precision=20):
     return low_board, high_board
 
 
-def decode(frequency_of_letters, code, precision_of_string=10):
+def decode(symbols_frequency, code, precision_of_string=10):
     if precision_of_string <= 0:
         raise ValueError("Precision of string can not be less than zero")
     if code < 0:
         raise ValueError("Code can not be less than zero")
     vector_length = dec.Decimal(0)
-    for sym in frequency_of_letters:
+    for sym in symbols_frequency:
         vector_length += sym.frequency
-    dict_of_letters = get_intervals_of_symbols(frequency_of_letters, 38)
+    symbols_intervals = get_symbols_intervals(symbols_frequency, 38)
     first_char = ""
-    for sym in frequency_of_letters:
-        low, high = get_elements_board(dict_of_letters, sym.symbol)
+    for sym in symbols_frequency:
+        low, high = get_symbols_boards(symbols_intervals, sym.symbol)
         if low <= code <= high:
             first_char = sym.symbol
     user_string = [first_char]
     for i in range(0, precision_of_string - 1):
-        low, high = get_elements_board(dict_of_letters, user_string[i])
+        low, high = get_symbols_boards(symbols_intervals, user_string[i])
         code = (code - low) / (high - low)
-        for sym in frequency_of_letters:
-            low, high = get_elements_board(dict_of_letters, sym.symbol)
+        for sym in symbols_frequency:
+            low, high = get_symbols_boards(symbols_intervals, sym.symbol)
             if low <= code <= high:
                 user_string.append(sym.symbol)
     result_string = ""
