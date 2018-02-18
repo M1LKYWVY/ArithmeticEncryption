@@ -1,13 +1,13 @@
 import decimal as dec
 
 
-class _Symbolfr:
+class Symbolfr:
     def __init__(self, symbol, frequency):
         self.symbol = symbol
         self.frequency = frequency
 
 
-class _Symbolbr:
+class Symbolbr:
     def __init__(self, symbol, low_board, high_board):
         self.symbol = symbol
         self.low_board = low_board

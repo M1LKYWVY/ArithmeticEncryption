@@ -8,18 +8,6 @@ from decimal import *
 from encryptions import *
 
 
-class Symbol:
-    def __init__(self, symbol, frequency):
-        self.symbol = symbol
-        self.frequency = frequency
-
-
-class Board:
-    def __init__(self, low_board, high_board):
-        self.low_board = low_board
-        self.high_board = high_board
-
-
 def get_frequency(element):
     return element.frequency
 
@@ -110,7 +98,7 @@ def decode_message_lambda(user_code, text_info, text_result, errors_label):
         if line.split("-")[0] == "precision":
             continue
         try:
-            symbols_frequency.append(Symbol(line.split("-")[0], Decimal(line.split("-")[1])))
+            symbols_frequency.append(Symbolfr(line.split("-")[0], Decimal(line.split("-")[1])))
         except InvalidOperation:
             errors_label.config(text="Can not parse text information")
             return
