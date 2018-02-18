@@ -47,10 +47,6 @@ def decode_mute(event):
             messagebox.showinfo("System information", "Widget's value copied to clipboard")
 
 
-def encode_message(event):
-    pass
-
-
 def encode_message_lambda(text_input, result_label, text_info, errors_label):
     getcontext().prec = 38
     glass = text_input.get(0.0, END)
@@ -88,10 +84,6 @@ def encode_message_lambda(text_input, result_label, text_info, errors_label):
     else:
         result_label.config(text="[" + str(low_board) + ";\n" + str(high_board) + ")")
     copy(copy_string)
-
-
-def decode_message(event):
-    pass
 
 
 def decode_message_lambda(user_code, text_info, text_result, errors_label):
