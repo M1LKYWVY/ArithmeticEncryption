@@ -45,7 +45,7 @@ def get_symbols_frequency(user_string, precision=20):
             if sym.symbol == ch_i:
                 is_exist = True
         if not is_exist:
-            symbols_frequency.append(_Symbolfr(ch_i, count))
+            symbols_frequency.append(Symbolfr(ch_i, count))
         count = dec.Decimal(0)
     symbols_frequency.sort(key=_get_frequency, reverse=True)
     return symbols_frequency
@@ -66,7 +66,7 @@ def get_symbols_intervals(symbols_frequency, precision=20):
         low_board = length
         high_board = low_board + element.frequency / vector_length
         length += element.frequency / vector_length
-        symbols_intervals.append(_Symbolbr(element.symbol, low_board, high_board))
+        symbols_intervals.append(Symbolbr(element.symbol, low_board, high_board))
     return symbols_intervals
 
 
