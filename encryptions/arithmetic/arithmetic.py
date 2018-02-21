@@ -51,11 +51,12 @@ def get_symbols_frequency(user_string, precision=20):
     return symbols_frequency
 
 
-def get_symbols_intervals(symbols_frequency, precision=20):
+def get_symbols_intervals(user_string, precision=20):
     if precision <= 0:
         raise ValueError("Precision of encoding can not be less than zero")
     dec.getcontext().prec = precision
     vector_length = dec.Decimal(0)
+    symbols_frequency = get_symbols_frequency(user_string, precision)
     for sym in symbols_frequency:
         if sym.frequency <= 0:
             raise ValueError("Frequency of symbol less than zero")
@@ -80,7 +81,7 @@ def encode(user_string, precision=20):
     symbols_frequency = get_symbols_frequency(user_string, precision)
     for sym in symbols_frequency:
         vector_length += sym.frequency
-    symbols_intervals = get_symbols_intervals(symbols_frequency, precision)
+    symbols_intervals = get_symbols_intervals(user_string, precision)
     low_old = dec.Decimal(0)
     low_board = dec.Decimal(0)
     high_old = dec.Decimal(1)
@@ -100,11 +101,15 @@ def decode(symbols_frequency, code, precision_of_string=10):
     if code < 0 or code > 1:
         raise ValueError("Incorrect code")
     vector_length = dec.Decimal(0)
-
+    user_string = ""
     for sym in symbols_frequency:
         vector_length += sym.frequency
+        count = int(sym.frequency)
+        while count > 0:
+            user_string += sym.symbol
+            count -= 1
     precision = int(len(str(code).split(".")[1]))
-    symbols_intervals = get_symbols_intervals(symbols_frequency, precision)
+    symbols_intervals = get_symbols_intervals(user_string, precision)
     first_char = ""
     for sym in symbols_frequency:
         low, high = get_symbols_boards(symbols_intervals, sym.symbol)

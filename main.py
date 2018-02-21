@@ -59,7 +59,7 @@ def encode_message_lambda(text_input, result_label, text_info, errors_label):
     text_info.insert(0.0, "User's string:\n" + user_string + "\n")
     symbols_frequency = get_symbols_frequency(user_string, precision=38)
     low_board, high_board = encode(user_string, precision=38)
-    symbols_intervals = get_symbols_intervals(symbols_frequency, precision=38)
+    symbols_intervals = get_symbols_intervals(user_string, precision=38)
     text_info.insert(END, "Frequency of symbols:\n")
     for element in symbols_frequency:
         low, high = get_symbols_boards(symbols_intervals, element.symbol)
