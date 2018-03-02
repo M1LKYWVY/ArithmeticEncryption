@@ -103,8 +103,11 @@ def decode_message_lambda(user_code, text_info, text_result, errors_label):
             errors_label.config(text="Can not parse text information")
             return
     symbols_frequency.sort(key=get_frequency, reverse=True)
-
-    result_string = decode(symbols_frequency, user_code, precision)
+    try:
+        result_string = decode(symbols_frequency, user_code, precision)
+    except ValueError:
+        errors_label.config(text="Can not parse user's string to decimal")
+        return
     text_result.delete(0.0, END)
     text_result.insert(0.0, result_string)
 
