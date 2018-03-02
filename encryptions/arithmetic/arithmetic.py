@@ -76,6 +76,7 @@ def encode(user_string, precision=20):
         raise ValueError("Precision of encoding can not be less than zero")
     if len(user_string) == 0:
         raise ValueError("Received empty string")
+    dec.getcontext().rounding = dec.ROUND_UP
     dec.getcontext().prec = precision
     vector_length = dec.Decimal(0)
     symbols_frequency = get_symbols_frequency(user_string, precision)
@@ -109,6 +110,8 @@ def decode(symbols_frequency, code, precision_of_string=10):
             user_string += sym.symbol
             count -= 1
     precision = int(len(str(code).split(".")[1]))
+    dec.getcontext().prec = precision
+    dec.getcontext().rounding = dec.ROUND_UP
     symbols_intervals = get_symbols_intervals(user_string, precision)
     first_char = ""
     for sym in symbols_frequency:
