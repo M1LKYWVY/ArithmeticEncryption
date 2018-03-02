@@ -74,18 +74,18 @@ def encode_message_lambda(text_input, result_label, text_info, errors_label):
     copy(copy_string)
 
 
-def decode_message_lambda(user_code, text_info, text_result, errors_label):
+def decode_message_lambda(decimal_field, text_info, text_result, errors_label):
     getcontext().prec = 38
-    glass = user_code.get(0.0, END)
+    glass = decimal_field.get(0.0, END)
     glass = glass.replace("\n", "")
-    user_code.delete(0.0, END)
-    user_code.insert(0.0, glass)
+    decimal_field.delete(0.0, END)
+    decimal_field.insert(0.0, glass)
     user_string = str(glass.strip().replace(" ", "_"))
     if user_string == "":
         errors_label.config(text="User's string not found")
         return
     try:
-        user_code = Decimal(glass)
+        decimal_field = Decimal(glass)
     except InvalidOperation:
         errors_label.config(text="Can not parse user's string to decimal")
         return
@@ -104,7 +104,7 @@ def decode_message_lambda(user_code, text_info, text_result, errors_label):
             return
     symbols_frequency.sort(key=get_frequency, reverse=True)
     try:
-        result_string = decode(symbols_frequency, user_code, precision)
+        result_string = decode(symbols_frequency, decimal_field, precision)
     except ValueError:
         errors_label.config(text="Can not parse user's string to decimal")
         return
