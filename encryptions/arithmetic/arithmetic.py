@@ -18,7 +18,7 @@ def _get_frequency(element):
     return element.frequency
 
 
-def get_symbols_boards(symbols_dict, symbol):
+def _get_symbols_boards(symbols_dict, symbol):
     for sym in symbols_dict:
         if sym.symbol == symbol:
             return sym.low_board, sym.high_board
@@ -88,7 +88,7 @@ def encode(user_string, precision=20):
     high_old = dec.Decimal(1)
     high_board = dec.Decimal(1)
     for ch in list(user_string):
-        low, high = get_symbols_boards(symbols_intervals, ch)
+        low, high = _get_symbols_boards(symbols_intervals, ch)
         high_board = low_old + (high_old - low_old) * high
         low_board = low_old + (high_old - low_old) * low
         high_old = high_board
@@ -115,15 +115,15 @@ def decode(symbols_frequency, code, precision_of_string=10):
     symbols_intervals = get_symbols_intervals(user_string, precision)
     first_char = ""
     for sym in symbols_frequency:
-        low, high = get_symbols_boards(symbols_intervals, sym.symbol)
+        low, high = _get_symbols_boards(symbols_intervals, sym.symbol)
         if low <= code <= high:
             first_char = sym.symbol
     user_string = [first_char]
     for i in range(0, precision_of_string - 1):
-        low, high = get_symbols_boards(symbols_intervals, user_string[i])
+        low, high = _get_symbols_boards(symbols_intervals, user_string[i])
         code = (code - low) / (high - low)
         for sym in symbols_frequency:
-            low, high = get_symbols_boards(symbols_intervals, sym.symbol)
+            low, high = _get_symbols_boards(symbols_intervals, sym.symbol)
             if low < code <= high:
                 user_string.append(sym.symbol)
     result_string = ""
