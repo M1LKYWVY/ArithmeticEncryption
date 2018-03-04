@@ -24,12 +24,11 @@ def get_symbols_boards(symbols_dict, symbol):
             return sym.low_board, sym.high_board
 
 
-def get_symbols_frequency(user_string, precision=20):
+def get_symbols_frequency(user_string, precision=250):
     if precision <= 0:
         raise ValueError("Precision of encoding can not be less than zero")
     if len(user_string) == 0:
         raise ValueError("Received empty string")
-    dec.getcontext().prec = precision
     symbols_array = []
     for ch in list(user_string):
             symbols_array.append(ch)
@@ -48,13 +47,13 @@ def get_symbols_frequency(user_string, precision=20):
             symbols_frequency.append(Symbolfr(ch_i, count))
         count = dec.Decimal(0)
     symbols_frequency.sort(key=_get_frequency, reverse=True)
+    dec.getcontext().prec = precision
     return symbols_frequency
 
 
-def get_symbols_intervals(user_string, precision=20):
+def get_symbols_intervals(user_string, precision=250):
     if precision <= 0:
         raise ValueError("Precision of encoding can not be less than zero")
-    dec.getcontext().prec = precision
     vector_length = dec.Decimal(0)
     symbols_frequency = get_symbols_frequency(user_string, precision)
     for sym in symbols_frequency:
@@ -71,13 +70,12 @@ def get_symbols_intervals(user_string, precision=20):
     return symbols_intervals
 
 
-def encode(user_string, precision=20):
+def encode(user_string, precision=250):
     if precision <= 0:
         raise ValueError("Precision of encoding can not be less than zero")
     if len(user_string) == 0:
         raise ValueError("Received empty string")
     dec.getcontext().rounding = dec.ROUND_UP
-    dec.getcontext().prec = precision
     vector_length = dec.Decimal(0)
     symbols_frequency = get_symbols_frequency(user_string, precision)
     for sym in symbols_frequency:
@@ -93,6 +91,7 @@ def encode(user_string, precision=20):
         low_board = low_old + (high_old - low_old) * low
         high_old = high_board
         low_old = low_board
+    dec.getcontext().prec = precision
     return low_board, high_board
 
 
@@ -109,10 +108,8 @@ def decode(symbols_frequency, code, precision_of_string=10):
         while count > 0:
             user_string += sym.symbol
             count -= 1
-    precision = int(len(str(code).split(".")[1]))
-    dec.getcontext().prec = precision
     dec.getcontext().rounding = dec.ROUND_UP
-    symbols_intervals = get_symbols_intervals(user_string, precision)
+    symbols_intervals = get_symbols_intervals(user_string)
     first_char = ""
     for sym in symbols_frequency:
         low, high = get_symbols_boards(symbols_intervals, sym.symbol)

@@ -8,7 +8,7 @@ from decimal import *
 from encryptions import *
 
 
-def get_frequency(element):
+def _get_frequency(element):
     return element.frequency
 
 
@@ -102,7 +102,7 @@ def decode_message_lambda(decimal_field, text_info, text_result, errors_label):
         except InvalidOperation:
             errors_label.config(text="Can not parse text information")
             return
-    symbols_frequency.sort(key=get_frequency, reverse=True)
+    symbols_frequency.sort(key=_get_frequency, reverse=True)
     try:
         result_string = decode(symbols_frequency, decimal_field, precision)
     except ValueError:
