@@ -45,8 +45,8 @@ def encode_message_lambda(text_input, result_label, text_info, errors_label):
     if len(user_string.strip()) == 0:
         errors_label.config(text="User's string not found")
         return
-    elif len(user_string) > 39:
-        errors_label.config(text="Very long user's string. 39 symbols is maximum.")
+    elif len(user_string) > 19:
+        errors_label.config(text="Very long user's string. 19 symbols is maximum.")
         return
     glass = ""
     for ch in list(user_string):
@@ -117,10 +117,6 @@ def main():
     root.title("Arithmetic Encryption")
     root.minsize(350, 370)
     root.maxsize(350, 370)
-    # frame_width = 350
-    # frame_height = 370
-    # config_size = "{0}x{1}".format(frame_width, frame_height)
-    # root.geometry(config_size)
 
     tabs = ttk.Notebook(root)
     tabs.pack(fill="both", expand=True)
@@ -168,7 +164,7 @@ def main():
                                                                  encode_result_label,
                                                                  encode_text_info,
                                                                  encode_errors))
-    # encode_submit.bind("<Button-1>", encode_message)
+
     encode_submit.place(x=260,
                         y=63,
                         width=80,
@@ -181,13 +177,8 @@ def main():
                            width=info_size[2] - 4,
                            height=info_size[3] - 3)
     encode_text_info.bind("<FocusIn>", encode_mute)
-    encode_text_info.insert(0.0, "Encoding information")
 
-    # encode_text_scrollbar = Scrollbar(encode_text_info)
-    # encode_text_scrollbar["command"] = encode_text_info.yview
-    # encode_text_input["yscrollcommand"] = encode_text_scrollbar.set
-    # encode_text_scrollbar.pack(side='right',
-    #                            fill='y')
+    encode_text_info.insert(0.0, "Encoding information")
 
     decode_float_input = Text(decode_tab)
     decode_float_input.place(x=label_size[0]+3,
@@ -209,7 +200,6 @@ def main():
                         y=6,
                         width=80,
                         height=40)
-    # decode_submit.bind("<Button-1>", decode_message)
 
     decode_errors = Label(decode_tab, fg="red")
     decode_errors.place(x=9,

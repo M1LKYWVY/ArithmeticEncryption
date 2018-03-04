@@ -99,7 +99,7 @@ def encode(user_string, precision=20):
 def decode(symbols_frequency, code, precision_of_string=10):
     if precision_of_string <= 0:
         raise ValueError("Precision of string can not be less than zero")
-    if code < 0 or code > 1:
+    if code < 0 or code >= 1:
         raise ValueError("Incorrect code")
     vector_length = dec.Decimal(0)
     user_string = ""
